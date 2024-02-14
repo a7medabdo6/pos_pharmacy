@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { SubmitHandler, Controller } from 'react-hook-form';
+import { SubmitHandler, Controller, useForm } from 'react-hook-form';
 import SelectLoader from '@/components/loader/select-loader';
 import QuillLoader from '@/components/loader/quill-loader';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,6 @@ import { Input } from '@/components/ui/input';
 import { Text, Title } from '@/components/ui/text';
 import { Form } from '@/components/ui/form';
 import cn from '@/utils/class-names';
-import { CategoryFormInput } from '@/utils/validators/create-category.schema';
 import UploadZone from '@/components/ui/file-upload/upload-zone';
 import { useCreateUnitHook } from '@/Apis/Unites/index';
 
@@ -19,6 +18,11 @@ import {
   SupplierFormInput,
   supplierFormSchema,
 } from '@/utils/validators/create-supplier.schema';
+import {
+  useCreatesupplierHook,
+  useEditupplierHook,
+  useGetOnesuppliersHook,
+} from '@/Apis/suppliers';
 const Select = dynamic(() => import('@/components/ui/select'), {
   ssr: false,
   loading: () => <SelectLoader />,
@@ -27,42 +31,6 @@ const QuillEditor = dynamic(() => import('@/components/ui/quill-editor'), {
   ssr: false,
   loading: () => <QuillLoader className="col-span-full h-[168px]" />,
 });
-
-// Parent category option
-const parentCategoryOption = [
-  {
-    value: 'fruits',
-    name: 'Fruits',
-  },
-  {
-    value: 'grocery',
-    name: 'Grocery',
-  },
-  {
-    value: 'meat',
-    name: 'Meat',
-  },
-  {
-    value: 'cat food',
-    name: 'Cat Food',
-  },
-];
-
-// Type option
-const typeOption = [
-  {
-    value: 'fresh vegetables',
-    name: 'Fresh Vegetables',
-  },
-  {
-    value: 'diet foods',
-    name: 'Diet Foods',
-  },
-  {
-    value: 'green vegetables',
-    name: 'Green Vegetables',
-  },
-];
 
 // a reusable form wrapper component
 function HorizontalFormBlockWrapper({
@@ -105,28 +73,27 @@ function HorizontalFormBlockWrapper({
   );
 }
 
-// main category form component for create and update category
 export default function CreateSupplier({
   id,
-  category,
+  Supplier,
   isModalView = true,
+  type = 'create',
 }: {
-  id?: string;
+  id?: any;
   isModalView?: boolean;
-  category?: SupplierFormInput;
+  Supplier: any;
+  type?: string;
 }) {
   const [reset, setReset] = useState({});
-  const { mutate: Create, isLoading } = useCreateUnitHook();
+  const { mutate: Create, isLoading } = useCreatesupplierHook();
+  const { mutate: update } = useEditupplierHook();
+
   const onSubmit: SubmitHandler<SupplierFormInput> = (data) => {
+    if (id) {
+      update({ ...data, id });
+      return;
+    }
     Create(data);
-    // setTimeout(() => {
-    //   console.log('createCategory data ->', data);
-    //   setReset({
-    //     nameEn: '',
-    //     nameAr: '',
-    //     type: '',
-    //   });
-    // }, 600);
   };
 
   return (
@@ -136,88 +103,97 @@ export default function CreateSupplier({
       onSubmit={onSubmit}
       useFormProps={{
         mode: 'onChange',
-        defaultValues: category,
+        defaultValues: Supplier,
       }}
       className="isomorphic-form flex flex-grow flex-col @container"
     >
-      {({ register, control, getValues, setValue, formState: { errors } }) => (
-        <>
-          <div className="flex-grow pb-10">
+      {({
+        register,
+        control,
+        getValues,
+        setValue,
+        formState: { errors, defaultValues },
+      }) => {
+        return (
+          <>
+            <div className="flex-grow pb-10">
+              <div
+                className={cn(
+                  'grid grid-cols-1 ',
+                  isModalView
+                    ? 'grid grid-cols-1 gap-8 divide-y divide-dashed  divide-gray-200 @2xl:gap-10 @3xl:gap-12 [&>div]:pt-7 first:[&>div]:pt-0 @2xl:[&>div]:pt-9 @3xl:[&>div]:pt-11'
+                    : 'gap-5'
+                )}
+              >
+                <HorizontalFormBlockWrapper
+                  title={'Add new Supplier:'}
+                  description={'Edit your Supplier information from here'}
+                  isModalView={isModalView}
+                >
+                  <div style={{ marginBlock: '10px' }}>
+                    <Input
+                      label="Supplier Name english"
+                      placeholder="Supplier Name english"
+                      {...register('nameEn')}
+                      error={errors.nameEn?.message}
+                    />
+                  </div>
+                  <div style={{ marginBlock: '10px' }}>
+                    <Input
+                      label="Supplier Name arabic"
+                      placeholder="Supplier Name arabic"
+                      {...register('nameAr')}
+                      defaultValue={defaultValues?.nameAr}
+                      error={errors.nameAr?.message}
+                    />
+                  </div>
+                  {/* <div style={{ marginBlock: '10px' }}>
+                      <Input
+                        label="Code"
+                        placeholder="Code"
+                        {...register('code')}
+                        error={errors.code?.message}
+                      />
+                    </div> */}
+                  <div className="col-span-2">
+                    <Controller
+                      control={control}
+                      name="description"
+                      render={({ field: { onChange, value } }) => (
+                        <QuillEditor
+                          value={value}
+                          onChange={onChange}
+                          label="Description"
+                          className="[&>.ql-container_.ql-editor]:min-h-[100px]"
+                          labelClassName="font-medium text-gray-700 dark:text-gray-600 mb-1.5"
+                        />
+                      )}
+                    />
+                  </div>
+                </HorizontalFormBlockWrapper>
+              </div>
+            </div>
+
             <div
               className={cn(
-                'grid grid-cols-1 ',
-                isModalView
-                  ? 'grid grid-cols-1 gap-8 divide-y divide-dashed  divide-gray-200 @2xl:gap-10 @3xl:gap-12 [&>div]:pt-7 first:[&>div]:pt-0 @2xl:[&>div]:pt-9 @3xl:[&>div]:pt-11'
-                  : 'gap-5'
+                'sticky bottom-0 z-40 flex items-center justify-end gap-3 bg-gray-0/10 backdrop-blur @lg:gap-4 @xl:grid @xl:auto-cols-max @xl:grid-flow-col',
+                isModalView ? '-mx-10 -mb-7 px-10 py-5' : 'py-1'
               )}
             >
-              <HorizontalFormBlockWrapper
-                title={'Add new Supplier:'}
-                description={'Edit your Supplier information from here'}
-                isModalView={isModalView}
+              <Button variant="outline" className="w-full @xl:w-auto">
+                Save as Draft
+              </Button>
+              <Button
+                type="submit"
+                isLoading={isLoading}
+                className="w-full @xl:w-auto dark:bg-gray-100 dark:text-white dark:active:bg-gray-100"
               >
-                <div style={{ marginBlock: '10px' }}>
-                  <Input
-                    label="Supplier Name english"
-                    placeholder="Supplier Name english"
-                    {...register('nameEn')}
-                    error={errors.nameEn?.message}
-                  />
-                </div>
-                <div style={{ marginBlock: '10px' }}>
-                  <Input
-                    label="Supplier Name arabic"
-                    placeholder="Supplier Name arabic"
-                    {...register('nameAr')}
-                    error={errors.nameAr?.message}
-                  />
-                </div>
-                <div style={{ marginBlock: '10px' }}>
-                  <Input
-                    label="Code"
-                    placeholder="Code"
-                    {...register('code')}
-                    error={errors.code?.message}
-                  />
-                </div>
-                <div className="col-span-2">
-                  <Controller
-                    control={control}
-                    name="description"
-                    render={({ field: { onChange, value } }) => (
-                      <QuillEditor
-                        value={value}
-                        onChange={onChange}
-                        label="Description"
-                        className="[&>.ql-container_.ql-editor]:min-h-[100px]"
-                        labelClassName="font-medium text-gray-700 dark:text-gray-600 mb-1.5"
-                      />
-                    )}
-                  />
-                </div>
-              </HorizontalFormBlockWrapper>
+                {id ? 'Update' : 'Create'} Supplier
+              </Button>
             </div>
-          </div>
-
-          <div
-            className={cn(
-              'sticky bottom-0 z-40 flex items-center justify-end gap-3 bg-gray-0/10 backdrop-blur @lg:gap-4 @xl:grid @xl:auto-cols-max @xl:grid-flow-col',
-              isModalView ? '-mx-10 -mb-7 px-10 py-5' : 'py-1'
-            )}
-          >
-            <Button variant="outline" className="w-full @xl:w-auto">
-              Save as Draft
-            </Button>
-            <Button
-              type="submit"
-              isLoading={isLoading}
-              className="w-full @xl:w-auto dark:bg-gray-100 dark:text-white dark:active:bg-gray-100"
-            >
-              {id ? 'Update' : 'Create'} Supplier
-            </Button>
-          </div>
-        </>
-      )}
+          </>
+        );
+      }}
     </Form>
   );
 }

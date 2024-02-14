@@ -17,8 +17,9 @@ const getAllsuppliers = async (data, search, filters) => {
 };
 
 const getOnesupplier = async (data, search, filters) => {
+  console.log(data);
   return await api.get(
-    `suppliers/${filters?.id}?`.concat(search ? `find=${search}&` : ``),
+    `suppliers/${data}`,
     data && {
       headers: {
         'Accept-Language': data,
@@ -27,7 +28,10 @@ const getOnesupplier = async (data, search, filters) => {
   );
 };
 const Createsupplier = async (data) => {
-  return await api.patch(`suppliers/create`, data);
+  return await api.post(`suppliers/create`, data);
+};
+const Updatedsupplier = async (data) => {
+  return await api.put(`suppliers/${data?.id}`, data);
 };
 
 const Deletesupplier = async (data) => {
@@ -89,6 +93,23 @@ const useCreatesupplierHook = () => {
     },
   });
 };
+const useEditupplierHook = () => {
+  return useMutation(Updatedsupplier, {
+    onSuccess: (res) => {
+      const result = {
+        status: res.status + '-' + res.statusText,
+        headers: res.headers,
+        data: res.data,
+      };
+      toast.success('supplier successfully Updated');
+      return result.data;
+    },
+    onError: (err) => {
+      console.log(err);
+      toast.error(`${err.message}`);
+    },
+  });
+};
 const useDeletesupplierHook = () => {
   const QueryClient = useQueryClient();
   return useMutation(Deletesupplier, {
@@ -110,4 +131,5 @@ export {
   useCreatesupplierHook,
   useDeletesupplierHook,
   useGetOnesuppliersHook,
+  useEditupplierHook,
 };

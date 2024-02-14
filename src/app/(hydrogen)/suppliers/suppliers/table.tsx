@@ -102,10 +102,9 @@ export default function OrderTable({
         data={tableData}
         // @ts-ignore
         columns={visibleColumns}
-        expandable={{
-          expandIcon: CustomExpandIcon,
-          expandedRowRender: (record) => <ExpandedOrderRow record={record} />,
-        }}
+        // expandable={{
+        //   expandIcon: CustomExpandIcon,
+        // }}
         paginatorOptions={{
           pageSize,
           setPageSize,

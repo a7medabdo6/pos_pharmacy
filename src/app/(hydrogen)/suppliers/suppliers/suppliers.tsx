@@ -245,7 +245,7 @@ export const getWidgetColumns = ({
         href={routes.eCommerce.editOrder(row.id)}
         className="ps-4 hover:text-gray-900 hover:underline"
       >
-        #{value}
+        {value}
       </Link>
     ),
   },

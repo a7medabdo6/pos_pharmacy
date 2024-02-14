@@ -6,7 +6,6 @@ import { fileSchema } from '@/utils/validators/common-rules';
 export const supplierFormSchema = z.object({
   nameEn: z.string().min(1, { message: messages.catNameIsRequired }),
   nameAr: z.string().min(1, { message: messages.catNameIsRequired }),
-  code: z.string().min(1, { message: messages.catNameIsRequired }),
   description: z.string().optional(),
 });
 

@@ -8,9 +8,11 @@ import CreateStore from '@/app/shared/settings/stores/create-store';
 import Createusers from '@/app/shared/settings/users/create-user';
 import CreateUnit from '@/app/shared/settings/unites/create-unit';
 import CreateSupplier from '@/app/shared/settings/suppliers/create-supplier';
+import { useRouter } from 'next/navigation';
+import { useGetOnesuppliersHook } from '@/Apis/suppliers';
 
 const pageHeader = {
-  title: 'Create A Supplier',
+  title: 'Edit A Supplier',
   breadcrumb: [
     {
       name: 'Settings',
@@ -20,12 +22,18 @@ const pageHeader = {
       name: 'supplierer',
     },
     {
-      name: 'Create',
+      name: 'Edit',
     },
   ],
 };
 
-export default function CreateCategoryPage() {
+export default function CreateCategoryPage({ params }: any) {
+  const { id } = params;
+  const { data, isLoading: isLoadingSupplier } = id
+    ? useGetOnesuppliersHook(id)
+    : { data: null, isLoading: false };
+  console.log(data?.data);
+
   return (
     <>
       <PageHeader title={pageHeader.title} breadcrumb={pageHeader.breadcrumb}>
@@ -38,7 +46,11 @@ export default function CreateCategoryPage() {
           </Button>
         </Link>
       </PageHeader>
-      <CreateSupplier Supplier={''} />
+      {isLoadingSupplier ? (
+        <div></div>
+      ) : (
+        <CreateSupplier type="edit" id={id} Supplier={data?.data} />
+      )}
     </>
   );
 }
